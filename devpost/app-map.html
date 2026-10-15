@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>App map · Conversation Goal Companion</title>
+  <style>
+    :root { color-scheme: light; --ink: #20352c; --muted: #64756c; --line: #dce6de; --wash: #f3f7f2; --green: #376b52; --card: #fff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--wash); color: var(--ink); font: 16px/1.6 system-ui, sans-serif; }
+    main { width: min(900px, calc(100% - 32px)); margin: 36px auto; }
+    header, section { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 24px; margin: 16px 0; }
+    h1, h2 { line-height: 1.2; margin: 0 0 12px; }
+    h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
+    h2 { font-size: 1.25rem; }
+    p { margin: 8px 0; }
+    .muted, small { color: var(--muted); }
+    .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: stretch; margin-top: 18px; }
+    .node { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: #fbfdfb; }
+    .node b { display: block; color: var(--green); margin-bottom: 4px; }
+    .arrow { display: none; }
+    a { color: #225c42; text-underline-offset: 3px; }
+    code { background: #edf3ed; border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
+    li { margin: 8px 0; }
+    .practice { border-left: 4px solid var(--green); padding-left: 14px; }
+    footer { color: var(--muted); padding: 8px 4px 24px; font-size: .9rem; }
+    @media (max-width: 680px) { main { margin: 16px auto; } header, section { padding: 18px; } .flow { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="muted">A small guide to the working app</p>
+      <h1>Conversation Goal Companion</h1>
+      <p>Talk or type about real life. The app keeps the conversation, turns clear goal details into editable steps, and carries the dashboard into later chats.</p>
+      <div class="flow" aria-label="Conversation to dashboard flow">
+        <div class="node"><b>1 · Conversation</b>Typed or live voice turns appear in the current chat.</div>
+        <div class="node"><b>2 · Organize</b>When you choose to save, the server asks Gemini for a summary and goal updates.</div>
+        <div class="node"><b>3 · Check evidence</b>The organizer merges goals and only accepts task completion with clear transcript evidence.</div>
+        <div class="node"><b>4 · See progress</b>The dashboard shows ordered steps; browser storage keeps chats and plans on this device.</div>
+      </div>
+    </header>
+
+    <section>
+      <h2>Follow one action in the code</h2>
+      <p>This is a reference route through the saved-chat organizer. The map points to current source symbols; it does not claim that a guided editor tour has happened.</p>
+      <ol>
+        <li><a href="../src/components/ChatShell.tsx"><code>src/components/ChatShell.tsx</code></a>, search for <code>finishConversation</code>. This sends the transcript and existing plans to <code>/api/organize</code>, then saves the summary and returned dashboard plans in app state.</li>
+        <li><a href="../src/app/api/organize/route.ts"><code>src/app/api/organize/route.ts</code></a>, inspect <code>mergePlan</code> and <code>mergePlans</code>. These match updates to existing goals, preserve open tasks, and require transcript evidence before accepting a new completion.</li>
+        <li><a href="../src/lib/storage.ts"><code>src/lib/storage.ts</code></a>, inspect <code>saveAppState</code>; then <a href="../src/lib/context.ts"><code>src/lib/context.ts</code></a>, inspect <code>buildDashboardContext</code> and <code>buildPriorChatContext</code>. The first keeps the plan in this browser; the latter prepares dashboard and selected prior-chat context for later conversations.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>To change this, start here</h2>
+      <ul>
+        <li>Change how a conversation updates goals or task completion: <code>src/app/api/organize/route.ts</code>, <code>mergePlan</code>.</li>
+        <li>Change what a new chat remembers: <code>src/lib/context.ts</code>, <code>buildPriorChatContext</code> and <code>buildDashboardContext</code>.</li>
+        <li>Change what the person can edit on the dashboard: <code>src/components/ChatShell.tsx</code>, task handlers and <code>LifeDashboard</code>.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>A practice to reuse</h2>
+      <p class="practice">Turn a broad promise into a visible check. Here, “a later chat remembers the goal” became an observable check: start a separate chat, ask about the saved goal, and compare the reply with the dashboard. That exposed missing continuity and gave the code a concrete target in <code>buildDashboardContext</code> and <code>buildPriorChatContext</code>.</p>
+    </section>
+
+    <section>
+      <h2>Open and run the project</h2>
+      <ol>
+        <li>Use Node.js 22 or newer, install dependencies with <code>npm install</code>, and make a private <code>.env.local</code> from the variable names in <code>.env.example</code>.</li>
+        <li>Start it with <code>npm run dev</code>, then open <code>http://localhost:3000</code>. Keep API keys and passwords out of the repository.</li>
+      </ol>
+      <p class="muted">This guide is a snapshot of source commit <code>f0adb66</code>. It works offline; update it if the mapped code changes.</p>
+    </section>
+    <footer>Standalone project guide · No scripts, external fonts, or network requests.</footer>
+  </main>
+</body>
+</html>
