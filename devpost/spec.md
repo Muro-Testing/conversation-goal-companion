@@ -65,7 +65,7 @@ type GoalPlan = {
 };
 ```
 
-Persist one versioned app state object in `localStorage`; derive progress from completed tasks divided by all tasks. The browser owns chats and plans. The server owns only environment secrets and short-lived request handling, not a conversation database. Live audio is streamed to Google and played in the browser; only text transcripts are retained. Closing voice appends recognized turns to the open chat without invoking the organizer. At an explicit end-and-save checkpoint, send the current transcript and existing plan to the organizer. Validate the response before merging it, and never accept model-proposed completion without a clear user quote or faithful evidence excerpt from that transcript. Chats with a saved summary remain resumable.
+Persist one versioned app state object in `localStorage`; derive progress from completed tasks divided by all tasks. The browser owns chats and plans. The server owns only environment secrets and short-lived request handling, not a conversation database. Live audio is streamed to Google and played in the browser; only text transcripts are retained. Closing voice appends recognized turns to the open chat without invoking the organizer. At an explicit end-and-save checkpoint, send the current transcript and existing plans to the organizer. Gemini returns the complete revised version of each goal discussed, including the ordered task list, so it can add, rename, reorder, combine, or remove steps as the conversation calls for. The server applies those revisions by goal and task IDs, then validates the response shape. When Gemini marks a step complete, the server checks only that its evidence quote appears in the person's current-chat transcript; it does not require particular words or task-name matching rules. Chats with a saved summary remain resumable.
 
 ## Google Service Contracts
 
@@ -87,8 +87,8 @@ Persist one versioned app state object in `localStorage`; derive progress from c
 ### Organize a finished chat: `POST /api/organize`
 
 - **Request:** `{ transcript, existingPlan }`.
-- **Server-to-Google:** `gemini-3.8-flash` `generateContent` with JSON response mode and a response schema for `{ summary, goal, why, context[], constraints[], tasks[{id?, title, status, completionEvidence?}], nextStep }`.
-- **Response:** Parse the model's JSON text, validate it against the app schema, and return the validated result. Keep existing task IDs when matching an existing task. A new `complete` status needs direct, clear user evidence in this transcript; otherwise preserve `open`.
+- **Server-to-Google:** `gemini-3.8-flash` `generateContent` with JSON response mode and a response schema for `{ summary, goals[{id, goal, why, context[], constraints[], motivation[], tasks[{id, title, status, expectation, completionEvidence}], nextStep}] }`.
+- **Response:** For each goal discussed, Gemini returns its complete revised plan in the intended order. Existing goal/task IDs preserve identity across title edits and reordering; empty IDs create new records. The server validates the response shape and verifies that evidence for a newly completed step is quoted from a user turn in the current conversation. The app does not limit updates to specific words or fixed step templates.
 - **Failure:** Save the transcript first. If generation, parsing, or validation fails, retain the chat and show that its summary/dashboard update needs retrying.
 
 Google's official Live API supports audio input/output and transcription configuration. Gemini structured output can constrain the organizer's JSON, but the app still validates it. Check the specific Google AI Studio project's tier and quota before the live test: Free Tier is currently listed at $0 within its limits, but limits vary and Google states free-tier content may be used to improve products. Paid-tier pricing and data terms differ. Never put `GEMINI_API_KEY` in browser code, chat, or Git.
