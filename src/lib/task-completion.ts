@@ -20,6 +20,14 @@ export function isValidTaskCompletion(
   // Supplying requested measurements is completion evidence even without saying "I completed this".
   if (infoTask && statsTask && assistantAsked && measuredValue) return true;
 
+  // Recognize a direct, first-person report that competitor or market research
+  // is done. Keep it scoped to research tasks so the same sentence cannot
+  // accidentally complete unrelated open steps.
+  const researchTask = /\b(?:research|competitors?|competition|market|industry|analysis)\b/i.test(taskTitle);
+  const researchClaim = /\b(?:i|we)(?:['’]ve| have)?\s+(?:(?:already)\s+)?(?:researched|investigated|analyzed|analysed|compared)\b/i.test(userMessage);
+  const researchTarget = /\b(?:competitors?|competition|rivals?|market|industry)\b/i.test(userMessage);
+  if (researchTask && researchClaim && researchTarget) return true;
+
   // A clear choice is enough for a selection step. When the step also asks to
   // check opening hours, require the next reply to contain those hours too.
   const selectionStep = /\b(?:choose|pick|select|decide|museum|venue|restaurant|option)\b/i.test(taskTitle);
@@ -45,3 +53,4 @@ export function isValidTaskCompletion(
   if (/\b(?:haven't|have not|hasn't|has not|not yet|didn't|did not|never|maybe|might|may|think|probably|almost|basically|kind of|sort of|could)\b/i.test(quote)) return false;
   return /\b(?:i|we)\s+(?:(?:have|has|already)\s+)*(?:finished|completed|done|sent|submitted|booked|launched|published|created|built|delivered|asked|contacted|called|emailed|reached out|spoke to|talked to|attended|paid|registered|tested|validated|defined|decided|selected|chosen|signed|shared|scheduled|prepared|set up|provided|gave|measured|recorded|confirmed)\b/i.test(quote);
 }
+
